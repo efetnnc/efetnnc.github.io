@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="About Efe Tunç">
+  <title>Efe Tunç | About</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+  
+  <style>
+    .about-section {
+      padding-top: 160px; /* offset nav */
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .about-content {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .profile-emoji {
+      font-size: 5rem;
+      margin-bottom: 24px;
+      display: inline-block;
+      animation: float 6s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <nav>
+    <a href="index.html" class="brand-logo">EfeTunç</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html" class="active">About</a>
+    </div>
+  </nav>
+
+  <section class="about-section">
+    <div class="glass-panel about-content fade-up visible">
+      <div class="profile-emoji">👨‍💻</div>
+      <h1 class="gradient-text" style="font-size: 3rem; margin-bottom: 24px;">About Me</h1>
+      <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 30px;">
+        I am a mobile developer studying Statistics at Ankara University. I blend analytical thinking from my background in statistics with a passion for building user-centric, elegant mobile experiences.
+      </p>
+      <a href="index.html" class="btn-primary">← Back to Portfolio</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Efe Tunç. All rights reserved.</p>
+  </footer>
+</body>
+</html>
