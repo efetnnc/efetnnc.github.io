@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Personal Notes - Efe Tunç">
+  <title>Efe Tunç | Notes</title>
+
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+
+  <style>
+    .notes-section {
+      padding-top: 140px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-bottom: 80px;
+      padding-left: 5%;
+      padding-right: 5%;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-1);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 24px;
+      transition: transform 0.2s ease;
+    }
+
+    .back-btn:hover {
+      transform: translateX(-4px);
+    }
+
+    .notes-header-block {
+      margin-bottom: 40px;
+    }
+
+    .notes-header-block h1 {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    .notes-header-block p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 40px;
+      padding: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .controls-panel {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+      max-width: 500px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-1);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+      background: #ffffff;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+      font-size: 1.1rem;
+    }
+
+    .filter-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tag-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.5);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tag-btn:hover {
+      background: rgba(16, 185, 129, 0.05);
+      color: var(--accent-2);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .tag-btn.active {
+      background: var(--accent-gradient);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Notes Grid */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .notes-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .note-card {
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      transition: all 0.3s ease;
+    }
+
+    .note-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(16, 185, 129, 0.25);
+      box-shadow: 0 12px 24px rgba(16, 185, 129, 0.08);
+    }
+
+    .note-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .note-category {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-2);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .note-date {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .note-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .note-body {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      flex-grow: 1;
+      word-break: break-word;
+    }
+
+    /* Content Styling (List, Bold, Code) */
+    .note-body ul.note-list {
+      margin-left: 20px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      list-style-type: disc;
+    }
+
+    .note-body ul.note-list li {
+      margin-bottom: 6px;
+    }
+
+    .inline-code {
+      font-family: 'Courier New', Courier, monospace;
+      background: rgba(15, 23, 42, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #0f172a;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    /* Code Blocks */
+    .code-container {
+      margin-top: 14px;
+      margin-bottom: 14px;
+      background: #0f172a;
+      /* Dark background */
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #1e293b;
+      /* Slate 800 header */
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .code-lang {
+      color: #94a3b8;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      border-color: white;
+    }
+
+    .code-container pre {
+      margin: 0;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .code-container code {
+      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      display: block;
+      white-space: pre;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-emoji {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Background Elements -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand-logo">EfeTunç</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+    </div>
+  </nav>
+
+  <!-- Notes Section -->
+  <section class="notes-section">
+    <a href="index.html" class="back-btn">← Back to Portfolio</a>
+
+    <div class="notes-header-block fade-up visible">
+      <h1 class="gradient-text">My Notes</h1>
+      <p>A collection of project updates, developer logs, and technical snippets.</p>
+    </div>
+
+    <!-- Controls Panel: Search & Filters -->
+    <div class="glass-panel controls-panel fade-up visible" style="animation-delay: 0.1s;">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="Search notes by title or content...">
+      </div>
+      <div class="filter-tags" id="tags-container">
+        <!-- Tags will be dynamically rendered here -->
+      </div>
+    </div>
+
+    <!-- Notes Grid -->
+    <div class="notes-grid fade-up visible" id="notes-grid" style="animation-delay: 0.2s;">
+      <!-- Notes cards will be dynamically rendered here -->
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="margin-top: 60px;">
+    <p>&copy; 2026 Efe Tunç. All rights reserved.</p>
+  </footer>
+
+  <!-- Script for managing and rendering notes -->
+  <script>
+    // ==========================================
+    // DATA SOURCE: EDIT YOUR NOTES HERE!
+    // ==========================================
+    const notesData = [
+      {
+        id: 1,
+        title: "Sunum Linki (Google Slides)",
+        date: "2026-06-04",
+        category: "Links",
+        content: "Proje sunumuna bu bağlantıdan erişebilirsiniz:\n- [Google Slides Sunumu](https://docs.google.com/presentation/d/1jXIu64m2bMgkIszk5NU8MfsbLSGy-riKG15p5qE3RRg/edit?usp=sharing)"
+      }
+    ];
+
+    // Current filter states
+    let currentCategory = "All";
+    let searchQuery = "";
+
+    // DOM Elements
+    const searchInput = document.getElementById("search-input");
+    const tagsContainer = document.getElementById("tags-container");
+    const notesGrid = document.getElementById("notes-grid");
+
+    // Initialize Page
+    window.addEventListener("DOMContentLoaded", () => {
+      renderTags();
+      renderNotes();
+
+      // Setup Search Listener
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value.toLowerCase().trim();
+        renderNotes();
+      });
+    });
+
+    // Helper to get unique categories
+    function getCategories() {
+      const categories = new Set(notesData.map(n => n.category));
+      return ["All", ...Array.from(categories)];
+    }
+
+    // Render Filter Buttons
+    function renderTags() {
+      const categories = getCategories();
+      tagsContainer.innerHTML = categories.map(cat => {
+        const isActive = cat === currentCategory ? "active" : "";
+        return `<button class="tag-btn ${isActive}" onclick="setCategory('${cat}')">${cat}</button>`;
+      }).join("");
+    }
+
+    // Set Category and Re-render
+    window.setCategory = function (category) {
+      currentCategory = category;
+      renderTags();
+      renderNotes();
+    };
+
+    // Copy Code Handler
+    window.copyCode = function (button) {
+      const codeContainer = button.closest('.code-container');
+      const codeElement = codeContainer.querySelector('code');
+      const text = codeElement.innerText;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.innerText;
+        button.innerText = "Copied!";
+        button.style.borderColor = "var(--accent-1)";
+        button.style.color = "var(--accent-1)";
+
+        setTimeout(() => {
+          button.innerText = originalText;
+          button.style.borderColor = "";
+          button.style.color = "";
+        }, 2000);
+      }).catch(err => {
+        console.error("Could not copy code:", err);
+      });
+    };
+
+    // Format content: markdown bold, inline code, lists, code blocks
+    function formatContent(content) {
+      // Escape HTML to prevent injection and breakages
+      let html = content
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Code blocks parser: ```javascript\ncode\n```
+      const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+      html = html.replace(codeBlockRegex, (match, lang, code) => {
+        return `<div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">${lang || 'code'}</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>${code.trim()}</code></pre>
+        </div>`;
+      });
+
+      // Inline code parser: `code`
+      html = html.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+      // Link parser: [text](url)
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: var(--accent-1); text-decoration: none; font-weight: 500; border-bottom: 1px dashed var(--accent-1);">$1</a>');
+
+      // Bold text parser: **text**
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Convert line breaks and lists
+      const lines = html.split('\n');
+      let inList = false;
+      let result = [];
+
+      for (let line of lines) {
+        // If it belongs to code block HTML, keep intact
+        if (line.includes('<div class="code-container"') ||
+          line.includes('<div class="code-header"') ||
+          line.includes('<span class="code-lang"') ||
+          line.includes('<button class="copy-btn"') ||
+          line.includes('</div') ||
+          line.includes('<pre') ||
+          line.includes('<code') ||
+          line.includes('</code') ||
+          line.includes('</pre')) {
+          if (inList) {
+            result.push('</ul>');
+            inList = false;
+          }
+          result.push(line);
+          continue;
+        }
+
+        const trimmed = line.trim();
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          if (!inList) {
+            result.push('<ul class="note-list">');
+            inList = true;
+          }
+          // Remove the list prefix and append list item
+          const listContent = line.replace(/^\s*[-*]\s+/, '');
+          result.push(`<li>${listContent}</li>`);
+        } else {
+          if (inList) {
+            result.push('</ul>');
+            inList = false;
+          }
+          result.push(line + '<br>');
+        }
+      }
+      if (inList) {
+        result.push('</ul>');
+      }
+
+      // Cleanup trailing / empty br tags inside elements
+      return result.join('\n').replace(/(<br>\s*){2,}/g, '<br><br>');
+    }
+
+    // Render Filtered Notes
+    function renderNotes() {
+      // Filter notes
+      const filtered = notesData.filter(note => {
+        const matchesCategory = currentCategory === "All" || note.category === currentCategory;
+        const matchesSearch = searchQuery === "" ||
+          note.title.toLowerCase().includes(searchQuery) ||
+          note.content.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch;
+      });
+
+      // Clear grid
+      notesGrid.innerHTML = "";
+
+      if (filtered.length === 0) {
+        notesGrid.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-emoji">📝</span>
+            <h3>No notes found</h3>
+            <p>Try adjusting your search query or category filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render cards
+      notesGrid.innerHTML = filtered.map(note => {
+        const formattedBody = formatContent(note.content);
+        return `
+          <article class="note-card">
+            <div class="note-meta">
+              <span class="note-category">${note.category}</span>
+              <span class="note-date">${note.date}</span>
+            </div>
+            <h3 class="note-title">${note.title}</h3>
+            <div class="note-body">${formattedBody}</div>
+          </article>
+        `;
+      }).join("");
+    }
+  </script>
+</body>
+
+</html>
