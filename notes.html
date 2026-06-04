@@ -314,6 +314,90 @@
     .empty-state p {
       color: var(--text-secondary);
     }
+
+    /* Simulator Styles */
+    .simulator-card {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+    }
+    .simulator-control {
+      margin-bottom: 16px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .sim-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .sim-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-1);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+      transition: transform 0.1s ease;
+    }
+    .sim-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .sim-chart {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sim-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sim-word {
+      width: 90px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      text-align: right;
+    }
+    .sim-bar-wrapper {
+      flex-grow: 1;
+      height: 20px;
+      background: rgba(15, 23, 42, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .sim-bar {
+      height: 100%;
+      background: var(--accent-gradient);
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.15s ease-out;
+    }
+    .sim-percentage {
+      width: 55px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-2);
+      text-align: left;
+    }
   </style>
 </head>
 
@@ -375,7 +459,7 @@
         title: "Sunum Linki (Google Slides)",
         date: "2026-06-04",
         category: "Links",
-        content: "Proje sunumuna bu bağlantıdan erişebilirsiniz:\n- [Google Slides Sunumu](https://docs.google.com/presentation/d/1jXIu64m2bMgkIszk5NU8MfsbLSGy-riKG15p5qE3RRg/edit?usp=sharing)"
+        content: "Proje sunumuna bu bağlantıdan erişebilirsiniz:\n- [Google Slides Sunumu](https://docs.google.com/presentation/d/1jXIu64m2bMgkIszk5NU8MfsbLSGy-riKG15p5qE3RRg/edit?usp=sharing)\n\n### Yapay Zeka Kelime Seçim Simülasyonu (Softmax & Top-p)\n\nBu simülasyonda modelin sonraki kelime için ürettiği ham skorlar (logitler): **İstatistik (12.0), Tıp (10.0), Mühendislik (8.0), Felsefe (5.0), Pizza (-2.0)** şeklindedir. Kod arka planda şu şekilde çalışır:\n1. **Sıcaklık (T)**: Logitleri T'ye bölüp `Softmax` uygular. T azaldıkça yüksek olasılıklı kelime baskınlaşır (kararlılık artar); T arttıkça olasılıklar birbirine yaklaşır (yaratıcılık/rastgelelik artar).\n2. **Top-p (Çekirdek Ekleme)**: Kelimeleri en yüksek olasılıktan başlayarak sıralar. Kümülatif olasılık `top_p` limitini aştığı anda sonraki kelimeleri eler ve kalanları yeniden normalize eder.\n\n[[PROBS_SIMULATOR]]"
       }
     ];
 
@@ -519,7 +603,28 @@
       }
 
       // Cleanup trailing / empty br tags inside elements
-      return result.join('\n').replace(/(<br>\s*){2,}/g, '<br><br>');
+      let finalHtml = result.join('\n').replace(/(<br>\s*){2,}/g, '<br><br>');
+
+      // Inject Probs Simulator HTML at the end (after line parsing)
+      finalHtml = finalHtml.replace(/\[\[PROBS_SIMULATOR\]\](<br>)?/g, `<div class="simulator-card">
+        <div class="simulator-control">
+          <div class="control-label">
+            <span>Sıcaklık (Temperature - T):</span>
+            <span id="temp-val">1.0</span>
+          </div>
+          <input type="range" id="temp-slider" min="0.1" max="5.0" step="0.1" value="1.0" class="sim-slider">
+        </div>
+        <div class="simulator-control">
+          <div class="control-label">
+            <span>Top-p:</span>
+            <span id="topp-val">1.00</span>
+          </div>
+          <input type="range" id="topp-slider" min="0.1" max="1.0" step="0.05" value="1.00" class="sim-slider">
+        </div>
+        <div class="sim-chart" id="sim-chart"></div>
+      </div>`);
+
+      return finalHtml;
     }
 
     // Render Filtered Notes
@@ -561,6 +666,89 @@
           </article>
         `;
       }).join("");
+
+      // Initialize Probability Simulator if element exists
+      initProbsSimulator();
+    }
+
+    function initProbsSimulator() {
+      const tempSlider = document.getElementById("temp-slider");
+      const toppSlider = document.getElementById("topp-slider");
+      if (!tempSlider || !toppSlider) return;
+
+      const tempVal = document.getElementById("temp-val");
+      const toppVal = document.getElementById("topp-val");
+      const simChart = document.getElementById("sim-chart");
+
+      const words = ["İstatistik", "Tıp", "Mühendislik", "Felsefe", "Pizza"];
+      const logits = [12.0, 10.0, 8.0, 5.0, -2.0];
+
+      function updateSimulation() {
+        const temp = parseFloat(tempSlider.value);
+        const topP = parseFloat(toppSlider.value);
+
+        tempVal.innerText = temp.toFixed(1);
+        toppVal.innerText = topP.toFixed(2);
+
+        // 1. Softmax (Sıcaklık Uygulaması)
+        const t = Math.max(temp, 0.01); // Sıfıra bölünmeyi engelle
+        const scaledLogits = logits.map(l => l / t);
+        const maxLogit = Math.max(...scaledLogits);
+        const expLogits = scaledLogits.map(l => Math.exp(l - maxLogit)); // Stabilite için
+        const sumExp = expLogits.reduce((sum, val) => sum + val, 0);
+        let probs = expLogits.map(l => l / sumExp);
+
+        // 2. Top-p Filtresi
+        // Orijinal indeksleri koruyarak olasılıkları sırala
+        let indexedProbs = probs.map((p, idx) => ({ p, idx }));
+        indexedProbs.sort((a, b) => b.p - a.p); // Azalan sıralama
+
+        let cumSum = 0;
+        let cutoffIdx = -1;
+        for (let i = 0; i < indexedProbs.length; i++) {
+          cumSum += indexedProbs[i].p;
+          if (cumSum > topP) {
+            cutoffIdx = i;
+            break;
+          }
+        }
+
+        if (cutoffIdx !== -1) {
+          for (let i = cutoffIdx + 1; i < indexedProbs.length; i++) {
+            indexedProbs[i].p = 0;
+          }
+        }
+
+        // Kalan olasılıkları yeniden normalize et
+        const finalSum = indexedProbs.reduce((sum, item) => sum + item.p, 0);
+        if (finalSum > 0) {
+          indexedProbs.forEach(item => item.p = item.p / finalSum);
+        }
+
+        // Orijinal sıraya geri döndür
+        let finalProbs = new Array(words.length);
+        indexedProbs.forEach(item => {
+          finalProbs[item.idx] = item.p;
+        });
+
+        // Çubuk Grafiği Çiz (CSS tabanlı horizontal bar grafiği)
+        simChart.innerHTML = words.map((word, idx) => {
+          const percent = finalProbs[idx] * 100;
+          return `
+            <div class="sim-row">
+              <span class="sim-word">${word}</span>
+              <div class="sim-bar-wrapper">
+                <div class="sim-bar" style="width: ${percent}%"></div>
+              </div>
+              <span class="sim-percentage">%${percent.toFixed(1)}</span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      tempSlider.addEventListener("input", updateSimulation);
+      toppSlider.addEventListener("input", updateSimulation);
+      updateSimulation(); // İlk hesaplamayı çalıştır
     }
   </script>
 </body>
